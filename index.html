@@ -2,71 +2,55 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>מאגר תורמות ביצית</title>
     
-    <!-- טעינת Tailwind CSS לעיצוב -->
+    <!-- טעינת Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- טעינת Babel כדי שהדפדפן יבין React -->
+    <!-- טעינת React & Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- טעינת הפונט Rubik -->
+    <!-- פונט Rubik -->
     <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
 
     <style>
+        /* הגדרות גלובליות */
         body, button, input, textarea, select {
             font-family: 'Rubik', sans-serif !important;
+            -webkit-tap-highlight-color: transparent;
         }
         
-        h1, h2, h3, h4, h5, h6, .font-bold {
-            font-weight: 700 !important;
-        }
-        
-        body { font-weight: 400; }
-        
-        .quote-text {
-            font-style: italic !important;
-            font-weight: 400 !important;
-        }
+        h1, h2, h3, h4, h5, h6, .font-bold { font-weight: 700 !important; }
+        body { font-weight: 400; background-color: #f8f9fa; overscroll-behavior-y: none; }
+        .quote-text { font-style: italic !important; font-weight: 400 !important; }
 
         /* אנימציות */
-        @keyframes float {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-10px) rotate(1deg); }
-        }
-        @keyframes fade-in {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        @keyframes slide-down {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes scale-up {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        .animate-fade-in { animation: fade-in 0.3s ease-out; }
-        .animate-slide-down { animation: slide-down 0.5s ease-out; }
-        .animate-scale-up { animation: scale-up 0.3s ease-out cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes float { 0%, 100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-10px) rotate(1deg); } }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes scale-up { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
         
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .animate-fade-in { animation: fade-in 0.3s ease-out; }
+        .animate-slide-up { animation: slide-up 0.3s ease-out cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .animate-scale-up { animation: scale-up 0.3s ease-out; }
+
+        /* גלילה מותאמת */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #fce7f3; border-radius: 20px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #fbcfe8; }
+        
+        /* הסתרת פס גלילה באלמנטים מסוימים */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
         /* סגנון גרירה */
-        .dragging {
-            opacity: 0.5;
-            transform: scale(1.02);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        }
+        .dragging { opacity: 0.5; transform: scale(1.02); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
     </style>
 </head>
-<body class="bg-[#f8f9fa] h-screen overflow-hidden text-gray-800">
+<body class="h-[100dvh] w-screen overflow-hidden text-gray-800 bg-gray-50">
 
-    <div id="root"></div>
+    <div id="root" class="h-full w-full"></div>
 
     <script type="text/babel" data-type="module">
         import React, { useState, useEffect, useRef } from 'https://esm.sh/react@18.2.0';
@@ -74,7 +58,8 @@
         import { 
             Heart, Search, ArrowRightLeft, Trophy, Upload, User, 
             Activity, BookOpen, X, Sparkles, Palette, Baby, 
-            Image as ImageIcon, Stethoscope, Info, Maximize2, GripVertical
+            Image as ImageIcon, Stethoscope, Info, Maximize2, GripVertical,
+            ChevronRight, ChevronUp, ChevronDown, Home
         } from 'https://esm.sh/lucide-react@0.292.0';
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -98,217 +83,76 @@
             const app = initializeApp(firebaseConfig);
             db = getFirestore(app);
             storage = getStorage(app);
-            console.log("Firebase initialized successfully");
         } catch (e) {
             console.error("Firebase init error:", e);
         }
 
         // --- נתונים ראשוניים ---
         const INITIAL_DATA = [
-            { 
-                id: "DO-1091", 
-                age: 28, 
-                height: 170, 
-                race: "לבנה", 
-                ethnicity: "היספני/לטיני", 
-                availability: "02-2025", 
-                hairColor: "שחור", 
-                hairType: "מקורזל", 
-                eyeColor: "חום כהה", 
-                skinColor: "לבנה", 
-                occupation: "מאפרת מקצועית בטלוויזיה", 
-                description: "כריזמטית, מעצימה, יצירתית.", 
-                hobbies: "חדר כושר, יוגה, מדיטציה, ציור", 
-                image: null, 
-                gallery: [], 
-                ranking: 999 
-            },
-            { 
-                id: "DO-1193", 
-                age: 19, 
-                height: 156, 
-                race: "מעורב", 
-                ethnicity: "היספני/לטיני", 
-                availability: "08-2024", 
-                hairColor: "שחור", 
-                hairType: "חלק", 
-                eyeColor: "חום כהה", 
-                skinColor: "לבנה", 
-                occupation: "מאפרת מקצועית בטלוויזיה", 
-                description: "נחושה, בטוחה בעצמה, אדיבה וחומלת.", 
-                hobbies: "התעמלות אומנותית, קריאה, טיולים", 
-                image: null, 
-                gallery: [], 
-                ranking: 999 
-            },
-            { 
-                id: "DO-1197", 
-                age: 28, 
-                height: 172, 
-                race: "מעורב", 
-                ethnicity: "היספני/לטיני", 
-                availability: "11-2025", 
-                hairColor: "שחור", 
-                hairType: "חלק", 
-                eyeColor: "חום כהה", 
-                skinColor: "לבנה", 
-                occupation: "מעצבת תעשייתית / מנהלת קהילה", 
-                description: "אוהבת, חברותית, חברתית, אחראית.", 
-                hobbies: "חדר כושר, קריאה, מפגש עם חברים", 
-                image: null, 
-                gallery: [], 
-                ranking: 999 
-            },
-            { 
-                id: "DO-1298", 
-                age: 27, 
-                height: 170, 
-                race: "מעורב", 
-                ethnicity: "היספני/לטיני", 
-                availability: "09-2025", 
-                hairColor: "בלונד", 
-                hairType: "חלק", 
-                eyeColor: "כחול", 
-                skinColor: "לבנה", 
-                occupation: "מנהלת תוכן בחברת תקליטים", 
-                description: "ספונטנית, שמחה, אוהבת.", 
-                hobbies: "כדורסל, טיולים רגליים, קולנוע ותיאטרון", 
-                image: null, 
-                gallery: [], 
-                ranking: 999 
-            },
-            { 
-                id: "DO-1357", 
-                age: 28, 
-                height: 167, 
-                race: "מעורב", 
-                ethnicity: "היספני/לטיני", 
-                availability: "05-2025", 
-                hairColor: "חום בהיר", 
-                hairType: "גלי", 
-                eyeColor: "ירוק", 
-                skinColor: "לבנה", 
-                occupation: "קרימינולוגית", 
-                description: "מתוקה, נאמנה, מחויבת.", 
-                hobbies: "התעמלות, נגינה בגיטרה, זמן עם משפחה וחברים", 
-                image: null, 
-                gallery: [], 
-                ranking: 999 
-            },
-            { 
-                id: "DO-1468", 
-                age: 29, 
-                height: 170, 
-                race: "מעורב", 
-                ethnicity: "היספני/לטיני", 
-                availability: "03-2025", 
-                hairColor: "בלונד", 
-                hairType: "גלי", 
-                eyeColor: "ירוק", 
-                skinColor: "לבנה", 
-                occupation: "דוגמנית ופרסומאית", 
-                description: "מבינה, חברותית, אינטליגנטית.", 
-                hobbies: "פילאטיס, משחק, יציאה לקולנוע", 
-                image: null, 
-                gallery: [], 
-                ranking: 999 
-            },
-            { 
-                id: "DO-1493", 
-                age: 23, 
-                height: 166, 
-                race: "מעורב", 
-                ethnicity: "היספני/לטיני", 
-                availability: "07-2025", 
-                hairColor: "חום כהה", 
-                hairType: "חלק", 
-                eyeColor: "חום כהה", 
-                skinColor: "לבנה", 
-                occupation: "דיילת אוויר", 
-                description: "הגיונית, מצחיקה, חברותית, בעלת חזון.", 
-                hobbies: "ריקוד, ספורט, טיולים, הכרת מקומות חדשים", 
-                image: null, 
-                gallery: [], 
-                ranking: 999 
-            },
-            { 
-                id: "DO-1517", 
-                age: 26, 
-                height: 169, 
-                race: "מעורב", 
-                ethnicity: "היספני/לטיני", 
-                availability: "11-2025", 
-                hairColor: "שחור", 
-                hairType: "מקורזל", 
-                eyeColor: "חום כהה", 
-                skinColor: "שחומה", 
-                occupation: "אנליסטית אדמיניסטרטיבית / מעצבת גרפית", 
-                description: "רגועה, אמפתית, אחראית.", 
-                hobbies: "חדר כושר, קעקועים, ציור, קריאה, טיולים", 
-                image: null, 
-                gallery: [], 
-                ranking: 999 
-            }
+            { id: "DO-1091", age: 28, height: 170, race: "לבנה", ethnicity: "היספני/לטיני", availability: "02-2025", hairColor: "שחור", hairType: "מקורזל", eyeColor: "חום כהה", skinColor: "לבנה", occupation: "מאפרת מקצועית בטלוויזיה", description: "כריזמטית, מעצימה, יצירתית.", hobbies: "חדר כושר, יוגה, מדיטציה, ציור", image: null, gallery: [], ranking: 999 },
+            { id: "DO-1193", age: 19, height: 156, race: "מעורב", ethnicity: "היספני/לטיני", availability: "08-2024", hairColor: "שחור", hairType: "חלק", eyeColor: "חום כהה", skinColor: "לבנה", occupation: "מאפרת מקצועית בטלוויזיה", description: "נחושה, בטוחה בעצמה, אדיבה וחומלת.", hobbies: "התעמלות אומנותית, קריאה, טיולים", image: null, gallery: [], ranking: 999 },
+            { id: "DO-1197", age: 28, height: 172, race: "מעורב", ethnicity: "היספני/לטיני", availability: "11-2025", hairColor: "שחור", hairType: "חלק", eyeColor: "חום כהה", skinColor: "לבנה", occupation: "מעצבת תעשייתית / מנהלת קהילה", description: "אוהבת, חברותית, חברתית, אחראית.", hobbies: "חדר כושר, קריאה, מפגש עם חברים", image: null, gallery: [], ranking: 999 },
+            { id: "DO-1298", age: 27, height: 170, race: "מעורב", ethnicity: "היספני/לטיני", availability: "09-2025", hairColor: "בלונד", hairType: "חלק", eyeColor: "כחול", skinColor: "לבנה", occupation: "מנהלת תוכן בחברת תקליטים", description: "ספונטנית, שמחה, אוהבת.", hobbies: "כדורסל, טיולים רגליים, קולנוע ותיאטרון", image: null, gallery: [], ranking: 999 },
+            { id: "DO-1357", age: 28, height: 167, race: "מעורב", ethnicity: "היספני/לטיני", availability: "05-2025", hairColor: "חום בהיר", hairType: "גלי", eyeColor: "ירוק", skinColor: "לבנה", occupation: "קרימינולוגית", description: "מתוקה, נאמנה, מחויבת.", hobbies: "התעמלות, נגינה בגיטרה, זמן עם משפחה וחברים", image: null, gallery: [], ranking: 999 },
+            { id: "DO-1468", age: 29, height: 170, race: "מעורב", ethnicity: "היספני/לטיני", availability: "03-2025", hairColor: "בלונד", hairType: "גלי", eyeColor: "ירוק", skinColor: "לבנה", occupation: "דוגמנית ופרסומאית", description: "מבינה, חברותית, אינטליגנטית.", hobbies: "פילאטיס, משחק, יציאה לקולנוע", image: null, gallery: [], ranking: 999 },
+            { id: "DO-1493", age: 23, height: 166, race: "מעורב", ethnicity: "היספני/לטיני", availability: "07-2025", hairColor: "חום כהה", hairType: "חלק", eyeColor: "חום כהה", skinColor: "לבנה", occupation: "דיילת אוויר", description: "הגיונית, מצחיקה, חברותית, בעלת חזון.", hobbies: "ריקוד, ספורט, טיולים, הכרת מקומות חדשים", image: null, gallery: [], ranking: 999 },
+            { id: "DO-1517", age: 26, height: 169, race: "מעורב", ethnicity: "היספני/לטיני", availability: "11-2025", hairColor: "שחור", hairType: "מקורזל", eyeColor: "חום כהה", skinColor: "שחומה", occupation: "אנליסטית אדמיניסטרטיבית / מעצבת גרפית", description: "רגועה, אמפתית, אחראית.", hobbies: "חדר כושר, קעקועים, ציור, קריאה, טיולים", image: null, gallery: [], ranking: 999 }
         ];
 
-        // --- רכיבי עזר ---
+        // --- רכיבי UI ---
 
-        const EggShape = ({ children, title, icon: Icon, onClick, colorClass = "from-white to-pink-50" }) => (
-            <div 
-                onClick={onClick}
-                className="group relative cursor-pointer transition-transform duration-500 hover:-translate-y-2"
-                style={{ perspective: '1000px' }}
-            >
-                <div 
-                    className={`
-                        w-48 h-64 md:w-56 md:h-72 
-                        bg-gradient-to-br ${colorClass}
-                        shadow-[inset_-10px_-10px_20px_rgba(0,0,0,0.05),10px_10px_20px_rgba(0,0,0,0.1)]
-                        border-4 border-white
-                        flex flex-col items-center justify-center text-center p-6
-                        relative overflow-hidden
-                        group-hover:shadow-pink-200 group-hover:shadow-2xl
-                        transition-all duration-300
-                    `}
-                    style={{ 
-                        borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%', 
-                        animation: 'float 6s ease-in-out infinite'
-                    }}
-                >
-                    <div className="bg-white/50 p-4 rounded-full mb-3 text-pink-600 backdrop-blur-sm group-hover:scale-110 transition-transform">
-                        <Icon size={32} />
+        const EggShape = ({ title, icon: Icon, onClick, colorClass = "from-white to-pink-50" }) => (
+            <div onClick={onClick} className="group relative cursor-pointer transform hover:-translate-y-1 transition-all duration-300">
+                <div className={`
+                    w-40 h-52 mx-auto
+                    bg-gradient-to-br ${colorClass}
+                    shadow-[inset_-5px_-5px_15px_rgba(0,0,0,0.05),5px_5px_15px_rgba(0,0,0,0.1)]
+                    border-4 border-white
+                    flex flex-col items-center justify-center text-center p-4
+                    relative overflow-hidden
+                    active:scale-95 transition-transform
+                `}
+                style={{ borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%' }}>
+                    <div className="bg-white/60 p-3 rounded-full mb-2 text-pink-600 backdrop-blur-sm">
+                        <Icon size={28} />
                     </div>
-                    <h3 className="font-bold text-gray-800 text-lg mb-1 tracking-wide">{title}</h3>
-                    <span className="text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity font-normal">לחץ לפתיחה</span>
-                    
-                    <div className="absolute top-4 right-8 w-12 h-6 bg-white/40 rounded-full rotate-[-45deg] filter blur-md"></div>
+                    <h3 className="font-bold text-gray-800 text-base leading-tight">{title}</h3>
+                    <div className="absolute top-4 right-6 w-8 h-4 bg-white/40 rounded-full rotate-[-45deg] filter blur-md"></div>
                 </div>
             </div>
         );
 
+        // מודל מותאם למובייל (Bottom Sheet) ולדסקטופ (Modal)
         const Modal = ({ isOpen, onClose, title, children, icon: Icon, maxWidth = "max-w-2xl" }) => {
             if (!isOpen) return null;
             return (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+                <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
                     <div 
-                        className={`bg-white rounded-3xl w-full ${maxWidth} max-h-[90vh] overflow-y-auto shadow-2xl border-4 border-pink-100 relative animate-scale-up`}
+                        className={`
+                            bg-white w-full ${maxWidth} 
+                            rounded-t-3xl md:rounded-3xl 
+                            max-h-[90vh] h-auto flex flex-col
+                            shadow-2xl border-t-4 md:border-4 border-pink-100 
+                            animate-slide-up md:animate-scale-up
+                        `}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <button 
-                            onClick={onClose}
-                            className="absolute top-4 left-4 p-2 bg-gray-100 hover:bg-pink-100 rounded-full transition-colors z-10"
-                        >
-                            <X size={20} className="text-gray-600" />
-                        </button>
-                        
-                        <div className="bg-pink-50 p-6 flex items-center gap-3 border-b border-pink-100">
-                            <div className="bg-white p-2 rounded-full text-pink-500 shadow-sm">
-                                <Icon size={24} />
+                        {/* ידית אחיזה למובייל */}
+                        <div className="md:hidden w-12 h-1.5 bg-gray-300 rounded-full mx-auto mt-3 mb-1"></div>
+
+                        <div className="p-4 md:p-6 flex items-center justify-between border-b border-pink-100 shrink-0">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-pink-50 p-2 rounded-full text-pink-500">
+                                    <Icon size={24} />
+                                </div>
+                                <h2 className="text-xl md:text-2xl font-bold text-gray-800">{title}</h2>
                             </div>
-                            <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
+                            <button onClick={onClose} className="p-2 bg-gray-100 hover:bg-pink-100 rounded-full transition-colors">
+                                <X size={20} className="text-gray-600" />
+                            </button>
                         </div>
                         
-                        <div className="p-8">
+                        <div className="p-4 md:p-8 overflow-y-auto custom-scrollbar">
                             {children}
                         </div>
                     </div>
@@ -318,15 +162,19 @@
 
         const ImageUploader = ({ donorId, onUpload, type = "main", compact = false }) => {
             const [uploading, setUploading] = useState(false);
-            const [isDragging, setIsDragging] = useState(false);
 
             const handleFile = async (file) => {
                 if (!file) return;
                 setUploading(true);
                 
                 if (!storage) {
-                    console.warn("Storage not available");
-                    setUploading(false);
+                    // Demo mode handling
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        onUpload(reader.result);
+                        setUploading(false);
+                    };
+                    reader.readAsDataURL(file);
                     return;
                 }
 
@@ -337,46 +185,27 @@
                     onUpload(downloadURL);
                 } catch (error) {
                     console.error("Upload error:", error);
-                    alert("שגיאה בהעלאת התמונה.");
+                    alert("שגיאה בהעלאה");
                 } finally {
                     setUploading(false);
                 }
             };
 
-            const handleDrop = (e) => {
-                e.preventDefault();
-                setIsDragging(false);
-                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                    handleFile(e.dataTransfer.files[0]);
-                }
-            };
-
             return (
-                <div 
-                    onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                    onDragLeave={() => setIsDragging(false)}
-                    onDrop={handleDrop}
-                    className={`
-                        border-2 border-dashed rounded-xl text-center transition-all duration-300 cursor-pointer relative overflow-hidden
-                        ${isDragging ? 'border-pink-500 bg-pink-100 scale-105' : 'border-gray-300 hover:border-pink-400 bg-gray-50 hover:bg-pink-50'}
-                        ${compact ? 'p-2' : 'p-6'}
-                    `}
-                >
-                    <input 
-                        type="file" 
-                        className="hidden" 
-                        id={`file-${donorId}-${type}`}
-                        accept="image/*"
-                        onChange={(e) => handleFile(e.target.files[0])}
-                    />
-                    <label htmlFor={`file-${donorId}-${type}`} className="cursor-pointer flex flex-col items-center justify-center gap-2 h-full w-full">
+                <div className={`
+                    border-2 border-dashed rounded-xl text-center transition-all duration-300 cursor-pointer relative overflow-hidden
+                    border-gray-300 hover:border-pink-400 bg-gray-50 active:bg-pink-50
+                    ${compact ? 'p-1' : 'p-4'}
+                `}>
+                    <input type="file" className="hidden" id={`file-${donorId}-${type}`} accept="image/*" onChange={(e) => handleFile(e.target.files[0])} />
+                    <label htmlFor={`file-${donorId}-${type}`} className="cursor-pointer flex flex-col items-center justify-center gap-1 h-full w-full py-2">
                         {uploading ? (
-                            <div className="animate-spin h-6 w-6 border-2 border-pink-500 rounded-full border-t-transparent"></div>
+                            <div className="animate-spin h-5 w-5 border-2 border-pink-500 rounded-full border-t-transparent"></div>
                         ) : (
                             <>
-                                <Upload size={compact ? 16 : 24} className="text-gray-400 group-hover:text-pink-500" />
-                                <span className={`font-medium text-gray-600 ${compact ? 'text-xs' : 'text-sm'}`}>
-                                    {type === 'main' ? 'תמונה ראשית' : 'הוסף לגלריה'}
+                                <Upload size={compact ? 16 : 24} className="text-gray-400" />
+                                <span className={`font-medium text-gray-600 ${compact ? 'text-[10px]' : 'text-xs'}`}>
+                                    {type === 'main' ? 'החלף תמונה' : 'הוסף'}
                                 </span>
                             </>
                         )}
@@ -385,23 +214,30 @@
             );
         };
 
-        // --- רכיב הדירוג (חדש) ---
+        // --- קומפוננטת דירוג עם כפתורים למובייל ---
         const RankingView = ({ donors, onUpdateOrder }) => {
             const [list, setList] = useState([]);
-            const dragItem = useRef();
-            const dragOverItem = useRef();
 
             useEffect(() => {
-                // מיון ראשוני לפי הדירוג הקיים
                 const sorted = [...donors].sort((a, b) => (a.ranking || 999) - (b.ranking || 999));
                 setList(sorted);
             }, [donors]);
 
-            const dragStart = (e, position) => {
-                dragItem.current = position;
-                e.target.classList.add('dragging');
+            const moveItem = (index, direction) => {
+                const newList = [...list];
+                if (direction === 'up' && index > 0) {
+                    [newList[index], newList[index - 1]] = [newList[index - 1], newList[index]];
+                } else if (direction === 'down' && index < newList.length - 1) {
+                    [newList[index], newList[index + 1]] = [newList[index + 1], newList[index]];
+                }
+                setList(newList);
+                onUpdateOrder(newList);
             };
 
+            // גרירה (דסקטופ)
+            const dragItem = useRef();
+            const dragOverItem = useRef();
+            const dragStart = (e, position) => { dragItem.current = position; };
             const dragEnter = (e, position) => {
                 dragOverItem.current = position;
                 const listCopy = [...list];
@@ -411,60 +247,122 @@
                 dragItem.current = position;
                 setList(listCopy);
             };
-
-            const drop = (e) => {
-                e.target.classList.remove('dragging');
-                dragItem.current = null;
+            const drop = () => { 
+                dragItem.current = null; 
                 dragOverItem.current = null;
-                // עדכון הדירוג החדש במסד הנתונים
-                onUpdateOrder(list);
+                onUpdateOrder(list); 
             };
 
             return (
-                <div className="max-w-3xl mx-auto p-4 animate-fade-in pb-20">
-                    <div className="text-center mb-8">
-                        <div className="bg-yellow-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center text-yellow-600 shadow-sm">
-                            <Trophy size={32} />
+                <div className="max-w-3xl mx-auto p-4 pb-24 md:pb-8 animate-fade-in">
+                    <div className="text-center mb-6">
+                        <div className="bg-yellow-100 p-3 rounded-full w-14 h-14 mx-auto mb-2 flex items-center justify-center text-yellow-600">
+                            <Trophy size={28} />
                         </div>
-                        <h2 className="text-3xl font-bold text-gray-800 mb-2">דירוג המועדפות שלי</h2>
-                        <p className="text-gray-500">גרור ושחרר את הכרטיסים כדי לסדר את התורמות לפי סדר העדיפות שלך.</p>
+                        <h2 className="text-2xl font-bold text-gray-800">הדירוג שלי</h2>
                     </div>
 
                     <div className="space-y-3">
                         {list.map((item, index) => (
                             <div 
-                                key={index}
+                                key={item.id}
                                 draggable
                                 onDragStart={(e) => dragStart(e, index)}
                                 onDragEnter={(e) => dragEnter(e, index)}
                                 onDragEnd={drop}
-                                className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4 cursor-grab active:cursor-grabbing hover:border-pink-300 transition-colors group"
+                                className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm flex items-center gap-3 transition-all"
                             >
-                                <div className="flex-shrink-0 w-10 h-10 bg-gray-100 text-gray-500 rounded-full flex items-center justify-center font-bold text-lg group-hover:bg-pink-100 group-hover:text-pink-600 transition-colors">
+                                <div className="flex-shrink-0 w-8 h-8 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center font-bold text-sm">
                                     {index + 1}
                                 </div>
                                 
-                                <div className="w-12 h-12 rounded-full bg-gray-100 overflow-hidden border border-gray-200">
-                                    {item.image ? (
-                                        <img src={item.image} alt="" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-gray-300">
-                                            <User size={20} />
-                                        </div>
-                                    )}
+                                <div className="w-12 h-12 rounded-full bg-gray-100 overflow-hidden border border-gray-100 shrink-0">
+                                    {item.image ? <img src={item.image} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-300"><User size={20}/></div>}
                                 </div>
 
-                                <div className="flex-1">
-                                    <h4 className="font-bold text-lg text-gray-800">{item.id}</h4>
-                                    <p className="text-sm text-gray-500">{item.occupation} • {item.age} שנים</p>
+                                <div className="flex-1 min-w-0">
+                                    <h4 className="font-bold text-sm text-gray-800 truncate">{item.id}</h4>
+                                    <p className="text-xs text-gray-500 truncate">{item.occupation}</p>
                                 </div>
 
-                                <div className="text-gray-300 group-hover:text-gray-500">
-                                    <GripVertical size={24} />
+                                {/* כפתורי הזזה למובייל */}
+                                <div className="flex flex-col gap-1 md:hidden">
+                                    <button onClick={() => moveItem(index, 'up')} className="p-1 bg-gray-50 rounded hover:bg-gray-200 disabled:opacity-30" disabled={index === 0}><ChevronUp size={16}/></button>
+                                    <button onClick={() => moveItem(index, 'down')} className="p-1 bg-gray-50 rounded hover:bg-gray-200 disabled:opacity-30" disabled={index === list.length - 1}><ChevronDown size={16}/></button>
                                 </div>
+                                {/* ידית גרירה לדסקטופ */}
+                                <div className="hidden md:block text-gray-300 cursor-grab active:cursor-grabbing"><GripVertical size={20} /></div>
                             </div>
                         ))}
                     </div>
+                </div>
+            );
+        };
+
+        // --- רכיב השוואה ---
+        const CompareView = ({ donors }) => {
+            const [selectedIds, setSelectedIds] = useState([]);
+
+            const toggle = (id) => {
+                if (selectedIds.includes(id)) setSelectedIds(selectedIds.filter(i => i !== id));
+                else if (selectedIds.length < 2) setSelectedIds([...selectedIds, id]); // הגבלה ל-2 במובייל לנוחות
+                else alert("במובייל ניתן להשוות עד 2 תורמות. הסר אחת כדי להוסיף אחרת.");
+            };
+
+            const selected = donors.filter(d => selectedIds.includes(d.id));
+
+            return (
+                <div className="p-4 pb-24 md:pb-8 h-full flex flex-col">
+                    <h2 className="text-2xl font-bold text-center mb-4">השוואה</h2>
+                    
+                    {/* בחירת תורמות */}
+                    <div className="mb-4 overflow-x-auto whitespace-nowrap pb-2 no-scrollbar">
+                        {donors.map(d => (
+                            <button key={d.id} onClick={() => toggle(d.id)} 
+                                className={`inline-block ml-2 px-3 py-1.5 rounded-full text-sm border transition-colors ${selectedIds.includes(d.id) ? 'bg-pink-600 text-white border-pink-600' : 'bg-white text-gray-600 border-gray-200'}`}>
+                                {d.id}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* טבלה */}
+                    {selected.length > 0 ? (
+                        <div className="flex-1 overflow-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+                            <table className="w-full text-sm text-right">
+                                <thead className="bg-pink-50 sticky top-0">
+                                    <tr>
+                                        <th className="p-3 text-gray-500 font-medium">פרמטר</th>
+                                        {selected.map(d => <th key={d.id} className="p-3 text-pink-700">{d.id}</th>)}
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {[
+                                        {l:'גיל',k:'age'}, {l:'גובה',k:'height'}, {l:'עיניים',k:'eyeColor'}, 
+                                        {l:'שיער',k:'hairColor'}, {l:'עור',k:'skinColor'}, {l:'מוצא',k:'race'},
+                                        {l:'זמינות',k:'availability'}
+                                    ].map(row => (
+                                        <tr key={row.k}>
+                                            <td className="p-3 font-medium text-gray-600 bg-gray-50/50 w-1/3">{row.l}</td>
+                                            {selected.map(d => <td key={d.id} className="p-3">{d[row.k]}</td>)}
+                                        </tr>
+                                    ))}
+                                    <tr>
+                                        <td className="p-3 font-medium bg-gray-50/50">תמונה</td>
+                                        {selected.map(d => (
+                                            <td key={d.id} className="p-3">
+                                                {d.image ? <img src={d.image} className="w-16 h-16 rounded-lg object-cover" /> : '-'}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                        <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
+                            <ArrowRightLeft size={48} className="mb-2 opacity-50" />
+                            <p>בחר תורמות להשוואה</p>
+                        </div>
+                    )}
                 </div>
             );
         };
@@ -474,11 +372,12 @@
         function App() {
             const [donors, setDonors] = useState([]);
             const [selectedDonorId, setSelectedDonorId] = useState(null);
-            const [activeTab, setActiveTab] = useState('view');
+            const [activeTab, setActiveTab] = useState('list'); // list, compare, ranking
             const [activeEgg, setActiveEgg] = useState(null);
             const [searchTerm, setSearchTerm] = useState('');
             const [zoomedImage, setZoomedImage] = useState(null);
 
+            // Fetch Data
             useEffect(() => {
                 const fetchData = async () => {
                     if (db) {
@@ -486,73 +385,41 @@
                             const q = query(collection(db, "donors"));
                             const snapshot = await getDocs(q);
                             if (!snapshot.empty) {
-                                const fetchedDonors = snapshot.docs.map(d => ({...d.data(), firestoreId: d.id}));
-                                if (fetchedDonors.length < INITIAL_DATA.length) {
-                                    setDonors(INITIAL_DATA);
-                                } else {
-                                    setDonors(fetchedDonors);
-                                }
+                                const fetched = snapshot.docs.map(d => ({...d.data(), firestoreId: d.id}));
+                                // Merge logic simply overrides for demo
+                                setDonors(fetched.length < INITIAL_DATA.length ? INITIAL_DATA : fetched);
                             } else {
                                 setDonors(INITIAL_DATA);
                             }
-                        } catch (e) {
-                            console.error("Error fetching from Firebase:", e);
-                            setDonors(INITIAL_DATA);
-                        }
-                    } else {
-                        setDonors(INITIAL_DATA);
-                    }
+                        } catch (e) { console.error(e); setDonors(INITIAL_DATA); }
+                    } else { setDonors(INITIAL_DATA); }
                 };
                 fetchData();
             }, []);
 
             const handleUpdateDonor = async (id, newData) => {
-                const updatedDonors = donors.map(d => d.id === id ? { ...d, ...newData } : d);
-                setDonors(updatedDonors);
-                
+                const updated = donors.map(d => d.id === id ? { ...d, ...newData } : d);
+                setDonors(updated);
                 if (db) {
-                    try {
-                        const donor = donors.find(d => d.id === id);
-                        if (donor.firestoreId) {
-                            const donorRef = doc(db, "donors", donor.firestoreId);
-                            await updateDoc(donorRef, newData);
-                        } else {
-                            const fullData = { ...donor, ...newData };
-                            const docRef = await addDoc(collection(db, "donors"), fullData);
-                            const newDonorsWithId = updatedDonors.map(d => 
-                                d.id === id ? { ...d, firestoreId: docRef.id } : d
-                            );
-                            setDonors(newDonorsWithId);
-                        }
-                    } catch (error) {
-                        console.error("Error saving to Firebase:", error);
+                    const donor = donors.find(d => d.id === id);
+                    if (donor.firestoreId) {
+                        await updateDoc(doc(db, "donors", donor.firestoreId), newData);
+                    } else {
+                        const ref = await addDoc(collection(db, "donors"), { ...donor, ...newData });
+                        setDonors(updated.map(d => d.id === id ? { ...d, firestoreId: ref.id } : d));
                     }
                 }
             };
 
-            const handleRankingUpdate = async (reorderedList) => {
-                // עדכון לוקאלי מיידי
-                const updatedDonors = donors.map(d => {
-                    const newRank = reorderedList.findIndex(item => item.id === d.id);
-                    return { ...d, ranking: newRank === -1 ? 999 : newRank + 1 };
-                });
-                setDonors(updatedDonors);
-
-                // שמירה ב-Firebase
+            const handleRankingUpdate = async (list) => {
+                const updated = donors.map(d => ({ ...d, ranking: list.findIndex(i => i.id === d.id) + 1 }));
+                setDonors(updated);
                 if (db) {
-                    try {
-                        const batch = writeBatch(db);
-                        reorderedList.forEach((donor, index) => {
-                            if (donor.firestoreId) {
-                                const ref = doc(db, "donors", donor.firestoreId);
-                                batch.update(ref, { ranking: index + 1 });
-                            }
-                        });
-                        await batch.commit();
-                        console.log("Ranking updated in Firebase");
-                    } catch (error) {
-                        console.error("Error saving ranking:", error);
-                    }
+                    const batch = writeBatch(db);
+                    list.forEach((d, i) => {
+                        if (d.firestoreId) batch.update(doc(db, "donors", d.firestoreId), { ranking: i + 1 });
+                    });
+                    await batch.commit();
                 }
             };
 
@@ -560,254 +427,256 @@
             const filteredDonors = donors.filter(d => d.id.toLowerCase().includes(searchTerm.toLowerCase()));
 
             return (
-                <div className="flex h-screen bg-[#f8f9fa] font-sans text-gray-800 overflow-hidden" dir="rtl">
-                    {/* Sidebar */}
-                    <aside className="w-80 bg-white border-l border-gray-200 flex flex-col shadow-lg z-20">
+                <div className="flex flex-col md:flex-row h-full overflow-hidden">
+                    
+                    {/* Header למובייל */}
+                    <div className="md:hidden bg-white p-4 border-b border-gray-200 flex items-center justify-between shadow-sm z-20">
+                        <div className="flex items-center gap-2">
+                            <div className="bg-pink-500 text-white p-1.5 rounded-lg"><Baby size={20} /></div>
+                            <span className="font-bold text-lg text-gray-800">EGG BANK</span>
+                        </div>
+                        {selectedDonorId && activeTab === 'list' ? (
+                            <button onClick={() => setSelectedDonorId(null)} className="text-sm font-bold text-pink-600 flex items-center">
+                                חזרה לרשימה <ChevronRight size={16} />
+                            </button>
+                        ) : (
+                            activeTab === 'list' && (
+                                <div className="relative w-32">
+                                    <input 
+                                        type="text" 
+                                        placeholder="חיפוש..." 
+                                        className="w-full bg-gray-100 rounded-full px-3 py-1 text-xs focus:ring-1 focus:ring-pink-300 outline-none"
+                                        value={searchTerm}
+                                        onChange={e => setSearchTerm(e.target.value)}
+                                    />
+                                    <Search size={12} className="absolute left-2 top-1.5 text-gray-400"/>
+                                </div>
+                            )
+                        )}
+                    </div>
+
+                    {/* Sidebar לדסקטופ */}
+                    <aside className="hidden md:flex w-80 bg-white border-l border-gray-200 flex-col shadow-lg z-20">
                         <div className="p-6 border-b border-pink-100 bg-pink-50/50">
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="bg-pink-500 text-white p-2 rounded-xl shadow-lg shadow-pink-200">
-                                    <Baby size={24} />
-                                </div>
-                                <h1 className="text-xl text-gray-800 tracking-tight">EGG BANK</h1>
+                                <div className="bg-pink-500 text-white p-2 rounded-xl"><Baby size={24} /></div>
+                                <h1 className="text-xl font-bold">EGG BANK</h1>
                             </div>
-                            
                             <div className="relative">
-                                <Search className="absolute right-3 top-2.5 text-gray-400" size={16} />
-                                <input 
-                                    type="text"
-                                    placeholder="חיפוש לפי מספר..."
-                                    className="w-full bg-white border border-gray-200 rounded-lg py-2 pr-10 pl-4 text-sm focus:ring-2 focus:ring-pink-200 focus:border-pink-300 outline-none transition-all"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
+                                <input type="text" placeholder="חיפוש..." className="w-full bg-white border border-gray-200 rounded-lg py-2 px-4 text-sm outline-none focus:border-pink-300" 
+                                       value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                                <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
                             </div>
                         </div>
-
                         <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
                             {filteredDonors.map(donor => (
-                                <div 
-                                    key={donor.id}
-                                    onClick={() => { setSelectedDonorId(donor.id); setActiveTab('view'); }}
-                                    className={`
-                                        group flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 border
-                                        ${selectedDonorId === donor.id 
-                                        ? 'bg-pink-600 border-pink-600 text-white shadow-md shadow-pink-200 transform scale-[1.02]' 
-                                        : 'bg-white border-transparent hover:border-pink-200 hover:bg-pink-50 text-gray-600'}
-                                    `}
-                                >
-                                    <div className={`
-                                        w-12 h-12 rounded-full overflow-hidden border-2 flex-shrink-0
-                                        ${selectedDonorId === donor.id ? 'border-white/30' : 'border-gray-100 group-hover:border-pink-200'}
-                                    `}>
-                                        {donor.image ? (
-                                            <img src={donor.image} alt={donor.id} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <div className={`w-full h-full flex items-center justify-center ${selectedDonorId === donor.id ? 'bg-white/20' : 'bg-gray-100'}`}>
-                                                <User size={20} />
-                                            </div>
-                                        )}
+                                <div key={donor.id} onClick={() => { setSelectedDonorId(donor.id); setActiveTab('list'); }}
+                                     className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border ${selectedDonorId === donor.id ? 'bg-pink-600 text-white border-pink-600' : 'bg-white hover:bg-pink-50 border-transparent'}`}>
+                                    <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden border border-white/30 shrink-0">
+                                        {donor.image ? <img src={donor.image} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center"><User size={16}/></div>}
                                     </div>
-                                    
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="text-sm truncate font-bold">{donor.id}</h4>
-                                        <div className="flex items-center gap-2 text-xs opacity-90 truncate">
-                                            <span>בת {donor.age}</span>
-                                            <span className="w-1 h-1 rounded-full bg-current"></span>
-                                            <span>{donor.height} ס"מ</span>
-                                        </div>
+                                    <div className="min-w-0">
+                                        <div className="font-bold text-sm truncate">{donor.id}</div>
+                                        <div className="text-xs opacity-80">בת {donor.age}</div>
                                     </div>
-                                    
-                                    {selectedDonorId === donor.id && (
-                                        <div className="animate-pulse">
-                                            <Heart size={16} fill="currentColor" />
-                                        </div>
-                                    )}
                                 </div>
                             ))}
                         </div>
-
-                        <div className="p-4 border-t border-gray-200 bg-gray-50 flex gap-2">
-                            <button 
-                                onClick={() => { setSelectedDonorId(null); setActiveTab('compare'); }}
-                                className={`flex-1 flex flex-col items-center gap-1 p-2 rounded-lg text-xs font-medium transition-colors ${activeTab === 'compare' ? 'bg-white text-pink-600 shadow-sm' : 'text-gray-500 hover:bg-white'}`}
-                            >
-                                <ArrowRightLeft size={20} />
-                                השוואה
-                            </button>
-                            <button 
-                                onClick={() => { setSelectedDonorId(null); setActiveTab('ranking'); }}
-                                className={`flex-1 flex flex-col items-center gap-1 p-2 rounded-lg text-xs font-medium transition-colors ${activeTab === 'ranking' ? 'bg-white text-pink-600 shadow-sm' : 'text-gray-500 hover:bg-white'}`}
-                            >
-                                <Trophy size={20} />
-                                דירוג
-                            </button>
+                        <div className="p-4 border-t flex gap-2">
+                            <button onClick={() => setActiveTab('compare')} className={`flex-1 p-2 rounded text-xs flex flex-col items-center gap-1 ${activeTab === 'compare' ? 'text-pink-600 bg-pink-50' : 'text-gray-500'}`}><ArrowRightLeft size={18}/>השוואה</button>
+                            <button onClick={() => setActiveTab('ranking')} className={`flex-1 p-2 rounded text-xs flex flex-col items-center gap-1 ${activeTab === 'ranking' ? 'text-pink-600 bg-pink-50' : 'text-gray-500'}`}><Trophy size={18}/>דירוג</button>
                         </div>
                     </aside>
 
-                    {/* Main Content */}
-                    <main className="flex-1 relative overflow-hidden bg-gradient-to-br from-[#fdfbf7] to-[#fff0f5]">
-                        <div className="absolute top-0 right-0 w-full h-full opacity-30 pointer-events-none" 
-                            style={{ backgroundImage: 'radial-gradient(#e5e7eb 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
-
-                        {!selectedDonorId && activeTab === 'view' && (
-                            <div className="h-full flex flex-col items-center justify-center text-center p-8 animate-fade-in">
-                                <div className="w-48 h-64 bg-white rounded-[50%_50%_50%_50%_/_60%_60%_40%_40%] shadow-xl border-4 border-white mb-6 flex items-center justify-center relative">
-                                    <span className="text-6xl animate-bounce">🥚</span>
-                                    <div className="absolute -bottom-4 bg-gray-200/50 w-32 h-4 rounded-[50%] blur-md"></div>
+                    {/* Main Content Area */}
+                    <main className="flex-1 relative overflow-hidden bg-gray-50 flex flex-col">
+                        
+                        {/* תצוגת רשימה במובייל (Grid) */}
+                        {activeTab === 'list' && !selectedDonorId && (
+                            <div className="md:hidden p-4 overflow-y-auto pb-24 h-full">
+                                <div className="grid grid-cols-2 gap-3">
+                                    {filteredDonors.map(donor => (
+                                        <div key={donor.id} onClick={() => setSelectedDonorId(donor.id)} 
+                                             className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex flex-col items-center text-center active:scale-95 transition-transform">
+                                            <div className="w-16 h-16 rounded-full bg-gray-100 mb-2 overflow-hidden border-2 border-white shadow-sm">
+                                                {donor.image ? <img src={donor.image} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-300"><User size={24}/></div>}
+                                            </div>
+                                            <h3 className="font-bold text-gray-800 text-sm">{donor.id}</h3>
+                                            <p className="text-xs text-gray-500">בת {donor.age} • {donor.height} ס"מ</p>
+                                        </div>
+                                    ))}
                                 </div>
-                                <h2 className="text-3xl text-gray-800 mb-2">ברוכים הבאים למאגר הביציות</h2>
-                                <p className="text-gray-500 max-w-md">בחר תורמת מהתפריט מימין כדי לצפות בפרטים, או השתמש בכלי ההשוואה והדירוג למטה.</p>
                             </div>
                         )}
 
-                        {activeTab === 'ranking' && (
-                            <div className="h-full overflow-y-auto">
-                                <RankingView donors={donors} onUpdateOrder={handleRankingUpdate} />
-                            </div>
-                        )}
-
-                        {selectedDonor && activeTab === 'view' && (
-                            <div className="h-full overflow-y-auto p-8 md:p-12 relative">
-                                <div className="flex flex-col md:flex-row items-center justify-between mb-12 gap-6 animate-slide-down">
-                                    <div className="flex items-center gap-6">
+                        {/* תצוגת Dashboard של תורמת (משותף למובייל ודסקטופ כשיש בחירה) */}
+                        {activeTab === 'list' && selectedDonorId && selectedDonor && (
+                            <div className="flex-1 overflow-y-auto pb-24 md:pb-0 h-full relative">
+                                {/* Desktop Placeholder/Welcome */}
+                                <div className="hidden md:block absolute inset-0 pointer-events-none opacity-30" style={{backgroundImage: 'radial-gradient(#e5e7eb 1px, transparent 1px)', backgroundSize: '30px 30px'}}></div>
+                                
+                                <div className="p-6 md:p-12 max-w-5xl mx-auto animate-fade-in relative z-10">
+                                    {/* Header */}
+                                    <div className="flex flex-col md:flex-row items-center gap-6 mb-8 md:mb-12">
                                         <div className="relative">
-                                            <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg">
-                                                {selectedDonor.image ? (
-                                                    <img src={selectedDonor.image} alt="" className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <div className="w-full h-full bg-pink-100 flex items-center justify-center text-pink-300"><User size={40}/></div>
-                                                )}
+                                            <div className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden border-4 border-white shadow-lg bg-white">
+                                                {selectedDonor.image ? <img src={selectedDonor.image} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-gray-200"><User size={48}/></div>}
                                             </div>
-                                            <div className="absolute -bottom-2 -left-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full shadow-sm border-2 border-white font-medium">
-                                                זמינה: {selectedDonor.availability}
+                                            <div className="absolute -bottom-2 inset-x-0 flex justify-center">
+                                                <span className="bg-green-100 text-green-700 text-[10px] md:text-xs px-2 py-0.5 rounded-full border border-white font-bold shadow-sm whitespace-nowrap">
+                                                    זמינה: {selectedDonor.availability}
+                                                </span>
                                             </div>
                                         </div>
-                                        <div>
-                                            <h2 className="text-4xl text-gray-800 mb-1">תורמת {selectedDonor.id}</h2>
-                                            <p className="text-gray-500 text-lg flex items-center gap-2">
-                                                <Sparkles size={16} className="text-yellow-500" />
-                                                {selectedDonor.occupation}
+                                        <div className="text-center md:text-right">
+                                            <h2 className="text-2xl md:text-4xl font-bold text-gray-800 mb-1">תורמת {selectedDonor.id}</h2>
+                                            <p className="text-sm md:text-lg text-gray-500 flex items-center justify-center md:justify-start gap-1">
+                                                <Sparkles size={14} className="text-yellow-500"/> {selectedDonor.occupation}
                                             </p>
+                                            <div className="flex gap-2 justify-center md:justify-start mt-3">
+                                                <span className="bg-white px-3 py-1 rounded-lg text-xs font-bold text-gray-600 shadow-sm border border-gray-100">בת {selectedDonor.age}</span>
+                                                <span className="bg-white px-3 py-1 rounded-lg text-xs font-bold text-gray-600 shadow-sm border border-gray-100">{selectedDonor.height} ס"מ</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    
-                                    <div className="flex gap-4">
-                                        <div className="bg-white/80 backdrop-blur px-4 py-2 rounded-2xl shadow-sm border border-pink-100 text-center">
-                                            <span className="block text-2xl font-bold text-pink-600">{selectedDonor.age}</span>
-                                            <span className="text-xs text-gray-500 font-medium">גיל</span>
-                                        </div>
-                                        <div className="bg-white/80 backdrop-blur px-4 py-2 rounded-2xl shadow-sm border border-pink-100 text-center">
-                                            <span className="block text-2xl font-bold text-pink-600">{selectedDonor.height}</span>
-                                            <span className="text-xs text-gray-500 font-medium">ס"מ</span>
-                                        </div>
-                                    </div>
-                                </div>
 
-                                <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12 pb-20">
-                                    <EggShape title="מי אני?" icon={Info} onClick={() => setActiveEgg('bio')} colorClass="from-blue-50 to-blue-100" />
-                                    <EggShape title="מראה חיצוני" icon={Palette} onClick={() => setActiveEgg('looks')} colorClass="from-purple-50 to-purple-100" />
-                                    <EggShape title="בריאות והיסטוריה" icon={Stethoscope} onClick={() => setActiveEgg('medical')} colorClass="from-green-50 to-green-100" />
-                                    <EggShape title="הסיפור שלי" icon={BookOpen} onClick={() => setActiveEgg('story')} colorClass="from-pink-50 to-pink-100" />
+                                    {/* Egg Grid - רספונסיבי: 2 במובייל, גמיש בדסקטופ */}
+                                    <div className="grid grid-cols-2 md:flex md:flex-wrap justify-center gap-4 md:gap-8">
+                                        <EggShape title="מי אני?" icon={Info} onClick={() => setActiveEgg('bio')} colorClass="from-blue-50 to-blue-100" />
+                                        <EggShape title="מראה חיצוני" icon={Palette} onClick={() => setActiveEgg('looks')} colorClass="from-purple-50 to-purple-100" />
+                                        <EggShape title="בריאות" icon={Stethoscope} onClick={() => setActiveEgg('medical')} colorClass="from-green-50 to-green-100" />
+                                        <EggShape title="הסיפור שלי" icon={BookOpen} onClick={() => setActiveEgg('story')} colorClass="from-pink-50 to-pink-100" />
+                                    </div>
                                 </div>
                             </div>
                         )}
 
-                        {activeTab === 'compare' && (
-                            <div className="h-full flex flex-col items-center justify-center text-gray-400">
-                                <div className="text-6xl mb-4">🚧</div>
-                                <h3 className="text-xl">אזור השוואה</h3>
-                                <p>כאן יופיע התוכן מהגרסה הקודמת</p>
+                        {/* תצוגת דסקטופ כאין בחירה */}
+                        {activeTab === 'list' && !selectedDonorId && (
+                            <div className="hidden md:flex flex-1 flex-col items-center justify-center text-center p-8 opacity-60">
+                                <div className="w-40 h-52 bg-white border-4 border-gray-100 rounded-[50%_50%_50%_50%_/_60%_60%_40%_40%] flex items-center justify-center mb-4 shadow-inner">
+                                    <Baby size={64} className="text-gray-300"/>
+                                </div>
+                                <h2 className="text-2xl font-bold text-gray-400">בחר תורמת מהרשימה</h2>
                             </div>
                         )}
+
+                        {/* תצוגת השוואה ודירוג */}
+                        {activeTab === 'compare' && <CompareView donors={donors} />}
+                        {activeTab === 'ranking' && <RankingView donors={donors} onUpdateOrder={handleRankingUpdate} />}
+
                     </main>
 
-                    {/* Overlays */}
+                    {/* Bottom Nav למובייל */}
+                    <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 flex justify-around p-2 z-30 pb-safe">
+                        <button onClick={() => {setActiveTab('list'); setSelectedDonorId(null);}} className={`flex flex-col items-center p-2 rounded-lg w-16 transition-colors ${activeTab === 'list' ? 'text-pink-600 bg-pink-50' : 'text-gray-400'}`}>
+                            <Home size={20} />
+                            <span className="text-[10px] mt-1 font-medium">ראשי</span>
+                        </button>
+                        <button onClick={() => setActiveTab('compare')} className={`flex flex-col items-center p-2 rounded-lg w-16 transition-colors ${activeTab === 'compare' ? 'text-pink-600 bg-pink-50' : 'text-gray-400'}`}>
+                            <ArrowRightLeft size={20} />
+                            <span className="text-[10px] mt-1 font-medium">השוואה</span>
+                        </button>
+                        <button onClick={() => setActiveTab('ranking')} className={`flex flex-col items-center p-2 rounded-lg w-16 transition-colors ${activeTab === 'ranking' ? 'text-pink-600 bg-pink-50' : 'text-gray-400'}`}>
+                            <Trophy size={20} />
+                            <span className="text-[10px] mt-1 font-medium">דירוג</span>
+                        </button>
+                    </nav>
+
+                    {/* Overlays / Modals */}
+                    
                     <Modal isOpen={activeEgg === 'bio'} onClose={() => setActiveEgg(null)} title="פרופיל אישי" icon={User}>
-                        <div className="space-y-6">
-                            <p className="text-xl text-center text-gray-600 leading-relaxed quote-text">"{selectedDonor?.description}"</p>
-                            <div className="grid grid-cols-2 gap-4 bg-gray-50 p-6 rounded-2xl">
-                                <div><span className="block text-xs text-gray-400 mb-1">עיסוק</span><span className="font-semibold text-lg">{selectedDonor?.occupation}</span></div>
-                                <div><span className="block text-xs text-gray-400 mb-1">מוצא</span><span className="font-semibold text-lg">{selectedDonor?.race}</span></div>
-                                <div><span className="block text-xs text-gray-400 mb-1">אתניות</span><span className="font-semibold text-lg">{selectedDonor?.ethnicity}</span></div>
+                        <div className="space-y-6 text-center md:text-right">
+                            <p className="text-lg md:text-xl text-gray-600 leading-relaxed quote-text">"{selectedDonor?.description}"</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gray-50 p-4 rounded-xl text-sm">
+                                <div className="flex justify-between md:block border-b md:border-0 border-gray-200 pb-2 md:pb-0"><span className="text-gray-400 block text-xs">עיסוק</span><span className="font-bold">{selectedDonor?.occupation}</span></div>
+                                <div className="flex justify-between md:block border-b md:border-0 border-gray-200 pb-2 md:pb-0"><span className="text-gray-400 block text-xs">מוצא</span><span className="font-bold">{selectedDonor?.race}</span></div>
+                                <div className="flex justify-between md:block"><span className="text-gray-400 block text-xs">אתניות</span><span className="font-bold">{selectedDonor?.ethnicity}</span></div>
                             </div>
                         </div>
                     </Modal>
 
                     <Modal isOpen={activeEgg === 'looks'} onClose={() => setActiveEgg(null)} title="מראה ונתונים" icon={Palette} maxWidth="max-w-4xl">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="space-y-4">
-                                <h3 className="font-bold text-gray-700 border-b pb-2 mb-4">נתונים פיזיים</h3>
-                                <div className="grid grid-cols-2 gap-4">
-                                    {[
-                                        { label: 'צבע שיער', val: selectedDonor?.hairColor },
-                                        { label: 'סוג שיער', val: selectedDonor?.hairType },
-                                        { label: 'צבע עיניים', val: selectedDonor?.eyeColor },
-                                        { label: 'גוון עור', val: selectedDonor?.skinColor },
-                                        { label: 'גובה', val: `${selectedDonor?.height} ס"מ` },
-                                        { label: 'גיל', val: selectedDonor?.age },
-                                    ].map((item, idx) => (
-                                        <div key={idx} className="bg-gray-50 border border-gray-100 shadow-sm p-4 rounded-xl text-center hover:border-pink-200 transition-colors">
-                                            <span className="block text-gray-400 text-xs mb-1">{item.label}</span>
-                                            <span className="text-gray-800 font-bold">{item.val}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="space-y-4">
-                                <h3 className="font-bold text-gray-700 border-b pb-2 mb-4">תמונות וגלריה</h3>
-                                <div className="relative group rounded-2xl overflow-hidden shadow-md h-64 bg-gray-100">
-                                    {selectedDonor?.image ? (
-                                        <img src={selectedDonor.image} alt="main" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-gray-300 flex-col gap-2"><ImageIcon size={48} /><span>אין תמונה ראשית</span></div>
-                                    )}
-                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center p-4">
-                                        <div className="w-full h-full">
-                                            <ImageUploader donorId={selectedDonor?.id} type="main" onUpload={(url) => handleUpdateDonor(selectedDonor.id, { image: url })} />
-                                        </div>
+                        <div className="flex flex-col md:grid md:grid-cols-2 gap-6 md:gap-8">
+                            {/* נתונים */}
+                            <div className="grid grid-cols-2 gap-3 order-2 md:order-1">
+                                {[
+                                    {l:'שיער', v:selectedDonor?.hairColor}, {l:'סוג', v:selectedDonor?.hairType},
+                                    {l:'עיניים', v:selectedDonor?.eyeColor}, {l:'עור', v:selectedDonor?.skinColor},
+                                    {l:'גובה', v:selectedDonor?.height}, {l:'גיל', v:selectedDonor?.age}
+                                ].map((i,x) => (
+                                    <div key={x} className="bg-gray-50 p-3 rounded-xl text-center border border-gray-100">
+                                        <span className="text-xs text-gray-400 block mb-1">{i.l}</span>
+                                        <span className="font-bold text-gray-800">{i.v}</span>
                                     </div>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-gray-400 mb-2 font-bold">גלריה נוספת (לחץ להגדלה)</p>
-                                    <div className="grid grid-cols-4 gap-2">
-                                        {selectedDonor?.gallery?.map((img, idx) => (
-                                            <div key={idx} onClick={() => setZoomedImage(img)} className="aspect-square rounded-lg overflow-hidden shadow-sm cursor-zoom-in hover:opacity-80 transition-opacity relative border border-gray-200">
-                                                <img src={img} alt="gallery" className="w-full h-full object-cover" />
-                                            </div>
-                                        ))}
-                                        <div className="aspect-square"><ImageUploader donorId={selectedDonor?.id} type="gallery" compact={true} onUpload={(url) => { const currentGallery = selectedDonor.gallery || []; handleUpdateDonor(selectedDonor.id, { gallery: [...currentGallery, url] }); }} /></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </Modal>
-
-                    <Modal isOpen={activeEgg === 'story'} onClose={() => setActiveEgg(null)} title="תחביבים וחלומות" icon={BookOpen}>
-                        <div className="bg-yellow-50 p-6 rounded-2xl border border-yellow-100 mb-6">
-                            <h4 className="text-yellow-800 mb-3 flex items-center gap-2 font-bold"><Sparkles size={18}/>תחביבים</h4>
-                            <div className="flex flex-wrap gap-2">
-                                {selectedDonor?.hobbies.split(',').map((hob, i) => (
-                                    <span key={i} className="bg-white text-gray-700 px-3 py-1.5 rounded-full text-sm shadow-sm border border-yellow-100">{hob.trim()}</span>
                                 ))}
                             </div>
+                            
+                            {/* תמונות */}
+                            <div className="order-1 md:order-2 space-y-4">
+                                <div className="relative rounded-2xl overflow-hidden shadow-md bg-gray-100 aspect-video md:aspect-auto md:h-64">
+                                    {selectedDonor?.image ? <img src={selectedDonor.image} className="w-full h-full object-cover"/> : <div className="w-full h-full flex flex-col items-center justify-center text-gray-300"><ImageIcon size={40}/><span className="text-xs mt-2">אין תמונה ראשית</span></div>}
+                                    <div className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center p-4">
+                                        <div className="w-full"><ImageUploader donorId={selectedDonor?.id} type="main" onUpload={url => handleUpdateDonor(selectedDonor.id, {image:url})} /></div>
+                                    </div>
+                                    {/* כפתור העלאה גלוי במובייל בצד */}
+                                    <div className="md:hidden absolute bottom-2 left-2 w-10 h-10 bg-white rounded-full shadow flex items-center justify-center overflow-hidden">
+                                        <ImageUploader donorId={selectedDonor?.id} type="main" compact={true} onUpload={url => handleUpdateDonor(selectedDonor.id, {image:url})} />
+                                    </div>
+                                </div>
+                                
+                                <div className="grid grid-cols-4 gap-2">
+                                    {selectedDonor?.gallery?.map((img, i) => (
+                                        <div key={i} onClick={() => setZoomedImage(img)} className="aspect-square rounded-lg overflow-hidden bg-gray-100 shadow-sm relative">
+                                            <img src={img} className="w-full h-full object-cover"/>
+                                        </div>
+                                    ))}
+                                    <div className="aspect-square">
+                                        <ImageUploader donorId={selectedDonor?.id} type="gallery" compact={true} onUpload={url => handleUpdateDonor(selectedDonor.id, {gallery: [...(selectedDonor.gallery||[]), url]})} />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <p className="text-gray-600 leading-relaxed">(כאן ניתן להוסיף ציטוטים נוספים מה-PDF לגבי חלומות ילדות או מטרות לעתיד)</p>
                     </Modal>
 
                     <Modal isOpen={activeEgg === 'medical'} onClose={() => setActiveEgg(null)} title="מידע רפואי" icon={Stethoscope}>
-                        <div className="text-center py-12 bg-green-50 rounded-2xl border border-green-100 border-dashed">
-                            <Activity size={48} className="mx-auto text-green-300 mb-4" />
-                            <h3 className="text-green-800 text-lg font-bold">בריאות תקינה</h3>
-                            <p className="text-green-600 max-w-sm mx-auto mt-2">כל הבדיקות הגנטיות והרפואיות נמצאו תקינות (על פי המידע בקובץ). לצפייה בדוח המלא יש ליצור קשר עם המרפאה.</p>
+                        <div className="bg-green-50 p-6 rounded-2xl border border-green-100 text-center">
+                            <Activity size={40} className="mx-auto text-green-400 mb-3" />
+                            <h3 className="font-bold text-green-800 mb-2">מצב בריאותי תקין</h3>
+                            <p className="text-sm text-green-700 leading-relaxed">
+                                על פי הדיווח, כל הבדיקות הגנטיות והרפואיות נמצאו תקינות.
+                                <br/><span className="text-xs opacity-70 mt-2 block">לצפייה בתיק המלא יש ליצור קשר עם המרפאה.</span>
+                            </p>
                         </div>
                     </Modal>
 
+                    <Modal isOpen={activeEgg === 'story'} onClose={() => setActiveEgg(null)} title="סיפור אישי" icon={BookOpen}>
+                        <div className="space-y-4">
+                            <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-100">
+                                <h4 className="font-bold text-yellow-800 mb-2 flex items-center gap-2 text-sm"><Sparkles size={16}/> תחביבים</h4>
+                                <div className="flex flex-wrap gap-2">
+                                    {selectedDonor?.hobbies?.split(',').map((h,i) => (
+                                        <span key={i} className="bg-white px-2 py-1 rounded-md text-xs text-gray-600 shadow-sm border border-yellow-100">{h.trim()}</span>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                <h4 className="font-bold text-gray-700 mb-2 text-sm">עוד על עצמי</h4>
+                                <p className="text-sm text-gray-600 leading-relaxed">
+                                    (כאן יופיע מידע נוסף מתוך קובץ ה-PDF אם קיים, כרגע מוצג התקציר הכללי)
+                                </p>
+                            </div>
+                        </div>
+                    </Modal>
+
+                    {/* Lightbox */}
                     {zoomedImage && (
-                        <div className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4 animate-fade-in cursor-zoom-out" onClick={() => setZoomedImage(null)}>
-                            <button className="absolute top-4 right-4 text-white p-2 hover:bg-white/20 rounded-full"><X size={32} /></button>
-                            <img src={zoomedImage} alt="Zoomed" className="max-w-full max-h-full rounded-lg shadow-2xl animate-scale-up" onClick={(e) => e.stopPropagation()} />
+                        <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center p-2 animate-fade-in" onClick={() => setZoomedImage(null)}>
+                            <button className="absolute top-4 right-4 text-white/80 p-2 bg-black/20 rounded-full"><X size={24}/></button>
+                            <img src={zoomedImage} className="max-w-full max-h-full object-contain rounded-lg" />
                         </div>
                     )}
+
                 </div>
             );
         }
